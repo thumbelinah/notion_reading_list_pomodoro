@@ -1,233 +1,279 @@
-function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}const { Component } = React;
+import React from "https://cdn.skypack.dev/react@17.0.1";
+import ReactDOM from "https://cdn.skypack.dev/react-dom@17.0.1";
 
-class App extends Component {
-  constructor() {
-    super();_defineProperty(this, "stopTimer",
+const SESSION = "Session";
+const BREAK = "Break";
+const SESSIONLEN = 25;
+const BREAKLEN = 5;
 
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      breakLen: BREAKLEN, // min
+      sessionLen: SESSIONLEN, // min
+      timeLeft: SESSIONLEN * 60, // sec
+      timerType: SESSION,
+      isTimerRunning: false,
+      intervalId: "" };
 
+    this.changeTimerType = this.changeTimerType.bind(this);
+    this.handleDecrementBreak = this.handleDecrementBreak.bind(this);
+    this.handleIncrementBreak = this.handleIncrementBreak.bind(this);
+    this.handleDecrementSession = this.handleDecrementSession.bind(this);
+    this.handleIncrementSession = this.handleIncrementSession.bind(this);
+    this.resetTimer = this.resetTimer.bind(this);
+    this.toggleStartStopTimer = this.toggleStartStopTimer.bind(this);
+  }
 
-
-
-
-
-
-
-
-
-
-    timer => {
-      clearInterval(timer);
-      timer = null;
-    });_defineProperty(this, "handleStart",
-
-    () => {
-      if (!this.pomodoroStarted) {
-        this.timer = setInterval(() => {
-          this.setState({ time: this.state.time - 1 });
-        }, 1000);
-        this.pomodoroStarted = !this.pomodoroStarted;
-      }
-
-      if (!this.time) {
-        this.time = this.state.time;
-        this.breakTime = this.state.breakTime;
-      }
-    });_defineProperty(this, "handlePause",
-
-    () => {
-      if (this.pomodoroStarted) {
-        this.isPaused = true;
-        this.setState(this.state);
-        if (!this.breakStarted) {
-          this.stopTimer(this.timer);
-        }
-
-        if (this.breakStarted) {
-          this.stopTimer(this.breakTimer);
-        }
-      }
-    });_defineProperty(this, "handleResume",
+  changeTimerType() {
+    this.setState(
+    {
+      timerType: this.state.timerType === SESSION ? BREAK : SESSION,
+      timeLeft:
+      this.state.timerType === SESSION ?
+      this.state.breakLen * 60 :
+      this.state.sessionLen * 60 },
 
     () => {
-      if (this.pomodoroStarted) {
-        this.setState(this.state);
-        this.isPaused = false;
+      this.runTimer();
+    });
 
-        if (!this.breakStarted) {
-          this.timer = setInterval(() => {
-            this.setState({ time: this.state.time - 1 });
-          }, 1000);
-        }
+  }
 
-        if (this.breakStarted) {
-          this.breakTimer = setInterval(() => {
-            this.setState({ breakTime: this.state.breakTime - 1 });
-          }, 1000);
-        }
-      }
-    });_defineProperty(this, "handleReset",
-
-    () => {
+  handleDecrementBreak() {
+    if (!this.state.isTimerRunning && this.state.breakLen > 1) {
       this.setState({
-        time: 1500,
-        breakTime: 300 });
+        breakLen: this.state.breakLen - 1,
+        timeLeft:
+        this.state.timerType === BREAK ?
+        (this.state.breakLen - 1) * 60 :
+        this.state.timeLeft });
 
-      this.stopTimer(this.timer);
-      this.pomodoroStarted = false;
-      this.stopTimer(this.breakTimer);
-      this.breakStarted = false;
-      this.isPaused = false;
-    });_defineProperty(this, "calculateTime",
-
-    time => {
-      return `${Math.floor(time / 60)}:${time % 60 > 9 ? "" + time % 60 : "0" + time % 60}`;
-    });_defineProperty(this, "increaseTime",
-
-    () => {
-      if (!this.pomodoroStarted) {
-        this.setState({ time: this.state.time + 60 });
-      }
-    });_defineProperty(this, "increaseBreakTime",
-
-    () => {
-      if (!this.pomodoroStarted) {
-        this.breakTime = this.breakTime + 60;
-        this.setState({ breakTime: this.state.breakTime + 60 });
-      }
-    });_defineProperty(this, "decreaseTime",
-
-    () => {
-      if (this.state.time > 60 && !this.pomodoroStarted) {
-        this.setState({ time: this.state.time - 60 });
-      }
-    });_defineProperty(this, "decreaseBreakTime",
-
-    () => {
-      if (this.breakTime > 60) {
-        this.breakTime = this.breakTime - 60;
-      }
-      if (this.state.breakTime > 60 && !this.pomodoroStarted) {
-        this.setState({ breakTime: this.state.breakTime - 60 });
-      }
-    });this.state = { time: 1500, // Initial length of time
-      breakTime: 300 // Initial time of break
-    };this.breakTime = 300;this.pomodoroStarted = false;this.breakStarted = false;this.isPaused = false;this.div = false;this.audio = new Audio('https://res.cloudinary.com/lucedesign/video/upload/v1494560703/8bit-laser_z04j15.wav');}componentDidUpdate() {
-    if (this.state.time < 1) {
-      this.audio.play();
-      var audio = new Audio('https://cdnjs.cloudflare.com/ajax/libs/ion-sound/3.0.7/sounds/branch_break.mp3');
-      audio.play();
-      this.stopTimer(this.timer);
-      //After the Pomodoro timer ends, set the time to the stored value set by the user
-      this.setState({ time: this.time });
-      if (!this.breakStarted) {
-        this.startBreak();
-        this.breakStarted = true;
-      }
-    }
-
-    if (this.state.breakTime < 1) {
-      this.audio.play();
-      this.stopTimer(this.breakTimer);
-      //After the break timer ends, set the time to the stored value set by the user
-      this.setState({ breakTime: this.breakTime });
-      this.pomodoroStarted = false;
-      this.breakStarted = false;
-      this.handleStart();
     }
   }
 
-  startBreak() {
-    this.breakTimer = setInterval(() => {
-      this.setState({ breakTime: this.state.breakTime - 1 });
+  handleIncrementBreak() {
+    if (!this.state.isTimerRunning && this.state.breakLen < 60) {
+      this.setState({
+        breakLen: this.state.breakLen + 1,
+        timeLeft:
+        this.state.timerType === BREAK ?
+        (this.state.breakLen + 1) * 60 :
+        this.state.timeLeft });
+
+    }
+  }
+
+  handleDecrementSession() {
+    if (!this.state.isTimerRunning && this.state.sessionLen > 1) {
+      this.setState({
+        sessionLen: this.state.sessionLen - 1,
+        timeLeft:
+        this.state.timerType === SESSION ?
+        (this.state.sessionLen - 1) * 60 :
+        this.state.timeLeft });
+
+    }
+  }
+
+  handleIncrementSession() {
+    if (!this.state.isTimerRunning && this.state.sessionLen < 60) {
+      this.setState({
+        sessionLen: this.state.sessionLen + 1,
+        timeLeft:
+        this.state.timerType === SESSION ?
+        (this.state.sessionLen + 1) * 60 :
+        this.state.timeLeft });
+
+    }
+  }
+
+  resetTimer() {
+    clearInterval(this.state.intervalId);
+    this.setState({
+      breakLen: BREAKLEN, // min
+      sessionLen: SESSIONLEN, // min
+      timeLeft: SESSIONLEN * 60, // sec
+      timerType: SESSION,
+      isTimerRunning: false,
+      intervalId: "" });
+
+    this.beepSound.pause();
+    this.beepSound.currentTime = 0;
+  }
+
+  runTimer() {
+    let intervalId = setInterval(() => {
+      this.setState(
+      {
+        timeLeft: this.state.timeLeft - 1 },
+
+      () => {
+        if (this.state.timeLeft === 0) {
+          this.beepSound.play();
+        }
+        if (this.state.timeLeft < 0) {
+          if (this.state.intervalId) clearInterval(this.state.intervalId);
+          this.changeTimerType();
+        }
+      });
+
     }, 1000);
+    this.setState({
+      intervalId });
+
+  }
+
+  toggleStartStopTimer() {
+    if (!this.state.isTimerRunning) {
+      this.runTimer();
+      this.setState({ isTimerRunning: true });
+    } else {
+      clearInterval(this.state.intervalId);
+      this.setState({
+        isTimerRunning: false,
+        intervalId: "" });
+
+    }
+  }
+
+  clockify() {
+    let minutes = Math.floor(this.state.timeLeft / 60);
+    let seconds = this.state.timeLeft - minutes * 60;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    return minutes + ":" + seconds;
+  }
+
+  render() {
+    let stopStartTimer = this.state.isTimerRunning ?
+    "fa fa-pause" :
+    "fa fa-play";
+
+    return /*#__PURE__*/(
+      React.createElement("div", { className: "clock-container" }, /*#__PURE__*/
+      React.createElement(Timer, {
+        timeLeft: this.clockify(),
+        timerType: this.state.timerType,
+        resetTimer: this.resetTimer,
+        stopStartTimer: stopStartTimer,
+        toggleStartStopTimer: this.toggleStartStopTimer }), /*#__PURE__*/
+
+      React.createElement("div", { className: "length-container" }, /*#__PURE__*/
+      React.createElement("div", { className: "break-container" }, /*#__PURE__*/
+      React.createElement(SetTimerLength, {
+        timerLabelId: "break-label",
+        timerLabel: "Break Length",
+        timerLen: this.state.breakLen,
+        timerLenId: "break-length",
+        decTimerId: "break-decrement",
+        handleDecrementTimer: this.handleDecrementBreak,
+        incTimerId: "break-increment",
+        handleIncrementTimer: this.handleIncrementBreak })), /*#__PURE__*/
+
+
+      React.createElement("div", { className: "session-container" }, /*#__PURE__*/
+      React.createElement(SetTimerLength, {
+        timerLabelId: "session-label",
+        timerLabel: "Session Length",
+        timerLen: this.state.sessionLen,
+        timerLenId: "session-length",
+        decTimerId: "session-decrement",
+        handleDecrementTimer: this.handleDecrementSession,
+        incTimerId: "session-increment",
+        handleIncrementTimer: this.handleIncrementSession }))), /*#__PURE__*/
+
+
+
+      React.createElement("audio", {
+        id: "beep",
+        load: "auto",
+        ref: audio => {
+          this.beepSound = audio;
+        },
+        src: "https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav" })));
+
+
+
+  }}
+
+
+class SetTimerLength extends React.Component {
+  constructor(props) {
+    super(props);
+    this.buttonRefInc = React.createRef();
+    this.buttonRefDec = React.createRef();
   }
 
   render() {
     return /*#__PURE__*/(
       React.createElement("div", null, /*#__PURE__*/
-      React.createElement("div", { className: "pomodoro" }, /*#__PURE__*/
-      React.createElement("div", null, /*#__PURE__*/
-      React.createElement("button", { onClick: this.increaseTime }, "+")), /*#__PURE__*/
+      React.createElement("div", { id: this.props.timerLabelId }, this.props.timerLabel), /*#__PURE__*/
+      React.createElement("span", { id: this.props.timerLenId, className: "timer-length" },
+      this.props.timerLen), /*#__PURE__*/
 
-      React.createElement("div", { className: "timer" },
-      this.breakStarted ?
-      this.calculateTime(this.state.breakTime) :
-      this.calculateTime(this.state.time)), /*#__PURE__*/
-
-      React.createElement("div", null, /*#__PURE__*/
-      React.createElement("button", { onClick: this.decreaseTime }, "-"))), /*#__PURE__*/
-
-
-      React.createElement("div", null, /*#__PURE__*/
-      React.createElement("div", { className: "start-pause" }, /*#__PURE__*/
-      React.createElement("button", { onClick: this.handleStart }, "Start"), /*#__PURE__*/
+      React.createElement("div", { className: "inc-dec-btn-container" }, /*#__PURE__*/
       React.createElement("button", {
-        onClick: this.isPaused ? this.handleResume : this.handlePause },
+        ref: this.buttonRefInc,
+        className: "inc-arrow",
+        onClick: () => {
+          this.props.handleIncrementTimer();
+          this.buttonRefInc.current.blur();
+        } }, /*#__PURE__*/
 
-      this.isPaused ? "Resume" : "Pause")), /*#__PURE__*/
+      React.createElement("i", { id: this.props.incTimerId, className: "fa fa-arrow-up" })), /*#__PURE__*/
 
+      React.createElement("button", {
+        ref: this.buttonRefDec,
+        onClick: () => {
+          this.props.handleDecrementTimer();
+          this.buttonRefDec.current.blur();
+        } }, /*#__PURE__*/
 
-      React.createElement("div", { className: "contain-it" }, /*#__PURE__*/
-      React.createElement("div", { className: "reset" }, /*#__PURE__*/
-      React.createElement("button", { onClick: this.handleReset }, "Reset")), /*#__PURE__*/
-
-      React.createElement("div", { className: "break-length" }, /*#__PURE__*/
-      React.createElement("div", { className: "break-time" }, /*#__PURE__*/
-
-      React.createElement("button", { onClick: this.increaseBreakTime }, "+"), /*#__PURE__*/
-      React.createElement("div", { className: "break-text" },
-      this.calculateTime(this.breakTime)), /*#__PURE__*/
-
-      React.createElement("button", { onClick: this.decreaseBreakTime }, "-"))))), /*#__PURE__*/
-
-
+      React.createElement("i", { id: this.props.decTimerId, className: "fa fa-arrow-down" })))));
 
 
-      React.createElement("div", null,
-      this.dev ? /*#__PURE__*/
-      React.createElement("table", null, /*#__PURE__*/
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("th", null, "State"), /*#__PURE__*/
-      React.createElement("th", null, "Value")), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "this.state.time:"), /*#__PURE__*/
-      React.createElement("td", null, this.state.time)), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "this.state.breakTime:"), /*#__PURE__*/
-      React.createElement("td", null, this.state.breakTime)), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "This.time:"), /*#__PURE__*/
-      React.createElement("td", null, this.time)), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "This.breakTime:"), /*#__PURE__*/
-      React.createElement("td", null, this.breakTime)), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "This.pomodoroStarted:"), /*#__PURE__*/
-      React.createElement("td", null, this.pomodoroStarted.toString())), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "breakStarted:"), /*#__PURE__*/
-      React.createElement("td", null, this.breakStarted.toString())), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "isPaused:"), /*#__PURE__*/
-      React.createElement("td", null, this.isPaused.toString())), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "This.timer:"), /*#__PURE__*/
-      React.createElement("td", null, this.timer)), /*#__PURE__*/
-
-      React.createElement("tr", null, /*#__PURE__*/
-      React.createElement("td", null, "This.breakTimer:"), /*#__PURE__*/
-      React.createElement("td", null, this.breakTimer))) :
 
 
-      "")));
+  }}
+
+
+class Timer extends React.Component {
+  constructor(props) {
+    super(props);
+    this.buttonRefStartStop = React.createRef();
+    this.buttonRefReset = React.createRef();
+  }
+
+  render() {
+    return /*#__PURE__*/(
+      React.createElement("div", null, /*#__PURE__*/
+      React.createElement("div", { id: "time-left" }, this.props.timeLeft), /*#__PURE__*/
+      React.createElement("div", { id: "display-controls" }, /*#__PURE__*/
+      React.createElement("div", { id: "timer-label" }, this.props.timerType), /*#__PURE__*/
+      React.createElement("div", { id: "timer-ssr" }, /*#__PURE__*/
+      React.createElement("button", {
+        ref: this.buttonRefStartStop,
+        id: "start-stop",
+        onClick: () => {
+          this.props.toggleStartStopTimer();
+          this.buttonRefStartStop.current.blur();
+        } }, /*#__PURE__*/
+
+      React.createElement("i", { className: this.props.stopStartTimer, "aria-hidden": "true" })), /*#__PURE__*/
+
+      React.createElement("button", {
+        ref: this.buttonRefReset,
+        id: "reset",
+        onClick: () => {
+          this.props.resetTimer();
+          this.buttonRefReset.current.blur();
+        } }, /*#__PURE__*/
+
+      React.createElement("i", { className: "fa fa-refresh", "aria-hidden": "true" }))))));
+
+
 
 
 
